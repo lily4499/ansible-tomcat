@@ -1,9 +1,6 @@
 pipeline {
-    agent {
-        docker {
-            image 'maven:3.8.5-eclipse-temurin-17' // Maven with JDK 17
-        }
-    }
+    agent any
+    
     environment {
         ANSIBLE_HOST_KEY_CHECKING = "False"
         DEPLOY_ENV = BRANCH_NAME == 'main' ? 'PROD' : 'DEV'
