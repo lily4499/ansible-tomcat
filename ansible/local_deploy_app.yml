@@ -1,0 +1,24 @@
+---
+- name: Deploy WAR file from local machine to Tomcat
+  hosts: all
+  become: yes
+  tasks:
+    - name: Copy WAR file from local machine to a temporary location on target host
+      ansible.builtin.copy:
+        src: /home/lilia/ansible-tomcat/demo-app/target/demo-app.war
+        dest: /tmp/demo-app.war
+
+    - name: Transfer WAR file to Tomcat's webapps directory
+      ansible.builtin.copy:
+        src: /tmp/demo-app.war
+        dest: /opt/tomcat/webapps/demo-app.war
+        remote_src: yes  # This ensures the source file on the target is used
+
+    - name: Stop Tomcat if running
+      ansible.builtin.shell:
+        cmd: /opt/tomcat/bin/shutdown.sh
+      ignore_errors: yes
+
+    - name: Start Tomcat
+      ansible.builtin.shell:
+        cmd: /opt/tomcat/bin/startup.sh

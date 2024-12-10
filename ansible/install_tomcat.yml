@@ -1,0 +1,76 @@
+---
+- name: Install and Configure Tomcat
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update the system packages
+      apt:
+        update_cache: yes
+
+    - name: Install OpenJDK 17
+      apt:
+        name: openjdk-17-jdk
+        state: present
+
+    - name: Download Tomcat tarball
+      get_url:
+        url: https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.33/bin/apache-tomcat-10.1.33.tar.gz
+        dest: /tmp/apache-tomcat-10.1.33.tar.gz
+
+    - name: Extract Tomcat tarball
+      unarchive:
+        src: /tmp/apache-tomcat-10.1.33.tar.gz
+        dest: /tmp
+        remote_src: yes
+
+    - name: Remove existing Tomcat directory
+      ansible.builtin.file:
+        path: /opt/tomcat/apache-tomcat-10.1.33
+        state: absent
+    
+    
+    - name: Move Tomcat to /opt directory
+      command:
+        cmd: mv /tmp/apache-tomcat-10.1.33 /opt/tomcat
+
+    - name: Set permissions for Tomcat directory
+      file:
+        path: /opt/tomcat
+        state: directory
+        mode: '0755'
+        recurse: yes
+
+    - name: Change ownership of Tomcat directory
+      ansible.builtin.file:
+        path: /opt/tomcat
+        state: directory
+        recurse: yes
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Update tomcat-users.xml with user credentials
+      blockinfile:
+        path: /opt/tomcat/conf/tomcat-users.xml
+        marker: ""
+        block: |
+          <tomcat-users>
+              <role rolename="manager-gui"/>
+              <role rolename="admin-gui"/>
+              <user username="admin" password="abc123" roles="manager-gui,admin-gui"/>
+          </tomcat-users>
+
+    - name: Comment out <Valve> element in Manager App's context.xml
+      replace:
+        path: /opt/tomcat/webapps/manager/META-INF/context.xml
+        regexp: '<Valve className="org.apache.catalina.valves.RemoteAddrValve".*?/>'
+        replace: '<!-- <Valve className="org.apache.catalina.valves.RemoteAddrValve" /> -->'
+
+    - name: Comment out <Valve> element in Host Manager's context.xml
+      replace:
+        path: /opt/tomcat/webapps/host-manager/META-INF/context.xml
+        regexp: '<Valve className="org.apache.catalina.valves.RemoteAddrValve".*?/>'
+        replace: '<!-- <Valve className="org.apache.catalina.valves.RemoteAddrValve" /> -->'
+
+
+    - name: Start Tomcat
+      command: /opt/tomcat/bin/startup.sh

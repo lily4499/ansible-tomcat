@@ -1,0 +1,23 @@
+---
+- name: Copy file from Jenkins workspace to Tomcat
+  hosts: all
+  become: yes
+  tasks:
+    - name: Copy WAR file from Jenkins workspace to a temporary location
+      ansible.builtin.command:
+        cmd: cp /var/jenkins_home/workspace/ansible-tomcat-install-deploy/demo-app/target/demo-app.war /tmp/demo-app.war
+      delegate_to: localhost
+
+    - name: Transfer WAR file to target host
+      ansible.builtin.copy:
+        src: /tmp/demo-app.war
+        dest: /opt/tomcat/webapps/demo-app.war
+
+    - name: Stop Tomcat if running
+      ansible.builtin.shell:
+        cmd: /opt/tomcat/bin/shutdown.sh
+      ignore_errors: yes
+
+    - name: Start Tomcat
+      ansible.builtin.shell:
+        cmd: /opt/tomcat/bin/startup.sh
