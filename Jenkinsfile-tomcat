@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+    environment {
+        APP_DIR = 'demo-app/'         // Directory of the application
+        TOMCAT_WEBAPPS = '/opt/tomcat/webapps/'  // Tomcat webapps directory
+        TOMCAT_USER = 'tomcat'          // SSH user for Tomcat server
+        TOMCAT_HOST = '172.18.0.3'  // Tomcat server IP or hostname
+        WAR_FILE = 'demo-app.war'        // Name of the WAR file to deploy
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                // Clone the repository
+                checkout scm
+            }
+        }
+        stage('Build') {
+            steps {
+                // Navigate to the app directory and build the project
+                dir("${APP_DIR}") {
+                    sh 'mvn clean package'
+                }
+            }
+        }
+        stage('Deploy to Tomcat') {
+            steps {
+                sshagent(['tomcat-ssh']) {
+                    // Deploy the WAR file to Tomcat server
+                    sh """
+                        ssh ${TOMCAT_USER}@${TOMCAT_HOST} 'mkdir -p ${TOMCAT_WEBAPPS}'
+                        scp ${APP_DIR}/target/${WAR_FILE} ${TOMCAT_USER}@${TOMCAT_HOST}:${TOMCAT_WEBAPPS}
+                        ssh ${TOMCAT_USER}@${TOMCAT_HOST} '/opt/tomcat/bin/shutdown.sh || true'
+                        ssh ${TOMCAT_USER}@${TOMCAT_HOST} '/opt/tomcat/bin/startup.sh'
+                    """
+                }
+            }
+        }
+    }
+    post {
+        always {
+            echo "Pipeline execution completed."
+        }
+    }
+}
