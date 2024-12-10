@@ -5,6 +5,7 @@ pipeline {
         TOMCAT_WEBAPPS = '/usr/local/tomcat/webapps/'  // Corrected Tomcat webapps directory
         TOMCAT_USER = 'tomcat'              // SSH user for Tomcat server
         TOMCAT_HOST = '172.18.0.3'          // Tomcat server IP or hostname
+        TOMCAT_SSH_PORT = '2222'            // Updated SSH port for Tomcat server
         WAR_FILE = 'demo-app.war'           // Name of the WAR file to deploy
     }
     stages {
@@ -27,10 +28,10 @@ pipeline {
                 sshagent(['tomcat-ssh']) {
                     // Deploy the WAR file to Tomcat server
                     sh """
-                        ssh ${TOMCAT_USER}@${TOMCAT_HOST} 'mkdir -p ${TOMCAT_WEBAPPS}'
-                        scp ${APP_DIR}/target/${WAR_FILE} ${TOMCAT_USER}@${TOMCAT_HOST}:${TOMCAT_WEBAPPS}
-                        ssh ${TOMCAT_USER}@${TOMCAT_HOST} '/usr/local/tomcat/bin/shutdown.sh || true'
-                        ssh ${TOMCAT_USER}@${TOMCAT_HOST} '/usr/local/tomcat/bin/startup.sh'
+                        ssh -p ${TOMCAT_SSH_PORT} ${TOMCAT_USER}@${TOMCAT_HOST} 'mkdir -p ${TOMCAT_WEBAPPS}'
+                        scp -P ${TOMCAT_SSH_PORT} ${APP_DIR}/target/${WAR_FILE} ${TOMCAT_USER}@${TOMCAT_HOST}:${TOMCAT_WEBAPPS}
+                        ssh -p ${TOMCAT_SSH_PORT} ${TOMCAT_USER}@${TOMCAT_HOST} '/usr/local/tomcat/bin/shutdown.sh || true'
+                        ssh -p ${TOMCAT_SSH_PORT} ${TOMCAT_USER}@${TOMCAT_HOST} '/usr/local/tomcat/bin/startup.sh'
                     """
                 }
             }
