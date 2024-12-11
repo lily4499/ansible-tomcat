@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        ANSIBLE_HOST_KEY_CHECKING = "False"  // Disable host key checking for Ansible
+        ANSIBLE_HOST_KEY_CHECKING = "False"
     }
 
     stages {
@@ -20,25 +20,30 @@ pipeline {
             steps {
                 echo "Building application on branch: ${BRANCH_NAME}"
                 sh 'cd demo-app && mvn clean package'
-                archiveArtifacts artifacts: 'demo-app/target/*.war', fingerprint: true
             }
         }
 
         stage('Configure Servers') {
             steps {
                 echo "Configuring ${DEPLOY_ENV} server with Tomcat..."
-                ansiblePlaybook credentialsId: 'ec2-devops-key',  // Use Jenkins credential for SSH
-                                 playbook: "ansible/install_tomcat.yml", 
-                                 inventory: 'ansible/inventory.ini'
+                ansiblePlaybook credentialsId: 'ec2-devops-key',
+                                 playbook: "ansible/install_tomcat_${DEPLOY_ENV}.yml", 
+                                 inventory: 'ansible/inventory.ini',
+                                 extraVars: [
+                                     workspace_path: "${WORKSPACE}"
+                                 ]
             }
         }
 
         stage('Deploy Application') {
             steps {
                 echo "Deploying application to ${DEPLOY_ENV} server on branch: ${BRANCH_NAME}"
-                ansiblePlaybook credentialsId: 'ec2-devops-key',  // Use Jenkins credential for SSH
-                                 playbook: "ansible/deploy_app.yml", 
-                                 inventory: 'ansible/inventory.ini'
+                ansiblePlaybook credentialsId: 'ec2-devops-key',
+                                 playbook: "ansible/deploy_app_${DEPLOY_ENV}.yml", 
+                                 inventory: 'ansible/inventory.ini',
+                                 extraVars: [
+                                     workspace_path: "${WORKSPACE}"
+                                 ]
             }
         }
     }
