@@ -7,54 +7,49 @@ pipeline {
         WAR_FILE = 'demo-app.war'           // Name of the WAR file to deploy
     }
     stages {
-        stage('Checkout') {
-            steps {
-                // Clone the specific branch
-                checkout scm
-                // Debug: Print the branch name
-                echo "Branch Name: ${env.BRANCH_NAME}"
-            }
-        }
-
-        stage('Build') {
+        stage('Process Branches') {
             steps {
                 script {
-                    // Ensure the build corresponds to the discovered branch
-                    echo "Building branch: ${env.BRANCH_NAME}"
-                    dir("${APP_DIR}") {
-                        // Clean and package for the specific branch
-                        sh 'mvn clean package'
-                    }
-                }
-            }
-        }
+                    def branches = ['main', 'dev', 'prod']
+                    for (branch in branches) {
+                        echo "Processing branch: ${branch}"
+                        
+                        // Checkout branch
+                        checkout([$class: 'GitSCM',
+                                  branches: [[name: "origin/${branch}"]],
+                                  userRemoteConfigs: [[url: 'https://github.com/<your-repo>.git']]])
 
-        stage('Deploy to Tomcat') {
-            steps {
-                script {
-                    def tomcatConfig = [:]
-                    if (env.BRANCH_NAME == 'dev') {
-                        tomcatConfig.host = '172.18.0.4'
-                        tomcatConfig.sshPort = '2223'
-                    } else if (env.BRANCH_NAME == 'prod') {
-                        tomcatConfig.host = '172.18.0.5'
-                        tomcatConfig.sshPort = '2224'
-                    } else if (env.BRANCH_NAME == 'main') {
-                        tomcatConfig.host = '172.18.0.3'
-                        tomcatConfig.sshPort = '2222'
-                    } else {
-                        echo "Skipping deployment: Branch ${env.BRANCH_NAME} is not configured for deployment."
-                        return
-                    }
+                        echo "Building branch: ${branch}"
+                        
+                        dir("${APP_DIR}") {
+                            sh 'mvn clean package'
+                        }
 
-                    echo "Deploying branch: ${env.BRANCH_NAME} to Tomcat server at ${tomcatConfig.host}"
-                    sshagent(['tomcat-ssh']) {
-                        sh """
-                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} 'mkdir -p ${TOMCAT_WEBAPPS}'
-                            scp -P ${tomcatConfig.sshPort} ${APP_DIR}/target/${WAR_FILE} ${TOMCAT_USER}@${tomcatConfig.host}:${TOMCAT_WEBAPPS}
-                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} '/usr/local/tomcat/bin/shutdown.sh || true'
-                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} '/usr/local/tomcat/bin/startup.sh'
-                        """
+                        echo "Deploying branch: ${branch}"
+                        
+                        def tomcatConfig = [:]
+                        if (branch == 'dev') {
+                            tomcatConfig.host = '172.18.0.4'
+                            tomcatConfig.sshPort = '2223'
+                        } else if (branch == 'prod') {
+                            tomcatConfig.host = '172.18.0.5'
+                            tomcatConfig.sshPort = '2224'
+                        } else if (branch == 'main') {
+                            tomcatConfig.host = '172.18.0.3'
+                            tomcatConfig.sshPort = '2222'
+                        } else {
+                            echo "Branch ${branch} is not configured for deployment."
+                            continue
+                        }
+
+                        sshagent(['tomcat-ssh']) {
+                            sh """
+                                ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} 'mkdir -p ${TOMCAT_WEBAPPS}'
+                                scp -P ${tomcatConfig.sshPort} ${APP_DIR}/target/${WAR_FILE} ${TOMCAT_USER}@${tomcatConfig.host}:${TOMCAT_WEBAPPS}
+                                ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} '/usr/local/tomcat/bin/shutdown.sh || true'
+                                ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} '/usr/local/tomcat/bin/startup.sh'
+                            """
+                        }
                     }
                 }
             }
@@ -62,7 +57,7 @@ pipeline {
     }
     post {
         always {
-            echo "Pipeline execution completed for branch: ${env.BRANCH_NAME}"
+            echo "Pipeline execution completed."
         }
     }
 }
