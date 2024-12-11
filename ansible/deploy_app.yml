@@ -5,7 +5,7 @@
   tasks:
     - name: Copy WAR file from Jenkins workspace to a temporary location
       ansible.builtin.command:
-        cmd: cp /var/jenkins_home/workspace/ansible-tomcat-install-deploy/demo-app/target/demo-app.war /tmp/demo-app.war
+        cmd: cp /var/jenkins_home/workspace/jenkins-multibranch-ec2/demo-app/target/demo-app.war /tmp/demo-app.war
       delegate_to: localhost
 
     - name: Transfer WAR file to target host
