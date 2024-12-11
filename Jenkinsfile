@@ -30,7 +30,7 @@ pipeline {
             }
         }
 
-        stage('Deploy Application') {
+        stage('Deploy Application...') {
             steps {
                 echo "Deploying application to ${DEPLOY_ENV} server on branch: ${BRANCH_NAME}"
                 ansiblePlaybook playbook: "ansible/deploy_app.yml", inventory: 'ansible/inventory.ini'
