@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Clone the repository
+                // Clone the specific branch
                 checkout scm
                 // Debug: Print the branch name
                 echo "Branch Name: ${env.BRANCH_NAME}"
@@ -18,20 +18,18 @@ pipeline {
 
         stage('Build') {
             steps {
-                dir("${APP_DIR}") {
-                    sh 'mvn clean package'
+                script {
+                    // Ensure the build corresponds to the discovered branch
+                    echo "Building branch: ${env.BRANCH_NAME}"
+                    dir("${APP_DIR}") {
+                        // Clean and package for the specific branch
+                        sh 'mvn clean package'
+                    }
                 }
             }
         }
 
         stage('Deploy to Tomcat') {
-            when {
-                anyOf {
-                    branch 'dev'
-                    branch 'prod'
-                    branch 'main'
-                }
-            }
             steps {
                 script {
                     def tomcatConfig = [:]
@@ -42,12 +40,14 @@ pipeline {
                         tomcatConfig.host = '172.18.0.5'
                         tomcatConfig.sshPort = '2224'
                     } else if (env.BRANCH_NAME == 'main') {
-                        tomcatConfig.host = '172.18.0.3' // Add the Tomcat server IP/host for the main branch
-                        tomcatConfig.sshPort = '2222'   // Add the correct SSH port for the main branch
+                        tomcatConfig.host = '172.18.0.3'
+                        tomcatConfig.sshPort = '2222'
                     } else {
-                        error("Branch ${env.BRANCH_NAME} is not configured for deployment.")
+                        echo "Skipping deployment: Branch ${env.BRANCH_NAME} is not configured for deployment."
+                        return
                     }
 
+                    echo "Deploying branch: ${env.BRANCH_NAME} to Tomcat server at ${tomcatConfig.host}"
                     sshagent(['tomcat-ssh']) {
                         sh """
                             ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} 'mkdir -p ${TOMCAT_WEBAPPS}'
@@ -62,7 +62,7 @@ pipeline {
     }
     post {
         always {
-            echo "Pipeline execution completed."
+            echo "Pipeline execution completed for branch: ${env.BRANCH_NAME}"
         }
     }
 }
