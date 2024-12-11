@@ -15,7 +15,6 @@ pipeline {
         }
         stage('Build') {
             steps {
-                // Navigate to the app directory and build the project
                 dir("${APP_DIR}") {
                     sh 'mvn clean package'
                 }
@@ -24,25 +23,27 @@ pipeline {
         stage('Deploy to Tomcat') {
             steps {
                 script {
+                    if (!env.BRANCH_NAME) {
+                        error("Branch name is null. Ensure the pipeline is configured as a Multibranch Pipeline and triggered by a branch.")
+                    }
                     def tomcatConfig = [:]
                     if (env.BRANCH_NAME == 'dev') {
                         tomcatConfig.host = '172.18.0.4'
-                        tomcatConfig.sshPort = '2223' // Replace with the appropriate SSH port for the dev host
+                        tomcatConfig.sshPort = '2223'
                     } else if (env.BRANCH_NAME == 'prod') {
                         tomcatConfig.host = '172.18.0.5'
-                        tomcatConfig.sshPort = '2224' // Replace with the appropriate SSH port for the prod host
+                        tomcatConfig.sshPort = '2224'
                     } else {
                         error("Branch ${env.BRANCH_NAME} is not configured for deployment.")
                     }
 
                     sshagent(['tomcat-ssh']) {
-                        // Deploy the WAR file to the Tomcat server
-                        sh """
-                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} 'mkdir -p ${TOMCAT_WEBAPPS}'
-                            scp -P ${tomcatConfig.sshPort} ${APP_DIR}/target/${WAR_FILE} ${TOMCAT_USER}@${tomcatConfig.host}:${TOMCAT_WEBAPPS}
-                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} '/usr/local/tomcat/bin/shutdown.sh || true'
-                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} '/usr/local/tomcat/bin/startup.sh'
-                        """
+                        sh \"\"\"\n
+                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} 'mkdir -p ${TOMCAT_WEBAPPS}'\n
+                            scp -P ${tomcatConfig.sshPort} ${APP_DIR}/target/${WAR_FILE} ${TOMCAT_USER}@${tomcatConfig.host}:${TOMCAT_WEBAPPS}\n
+                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} '/usr/local/tomcat/bin/shutdown.sh || true'\n
+                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} '/usr/local/tomcat/bin/startup.sh'\n
+                        \"\"\"\n
                     }
                 }
             }
