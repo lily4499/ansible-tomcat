@@ -1,12 +1,21 @@
 pipeline {
     agent any
-    
+
     environment {
         ANSIBLE_HOST_KEY_CHECKING = "False"
-        DEPLOY_ENV = BRANCH_NAME == 'main' ? 'PROD' : 'DEV'
     }
 
     stages {
+        stage('Determine Environment') {
+            steps {
+                script {
+                    // Set the DEPLOY_ENV dynamically based on the branch name
+                    env.DEPLOY_ENV = BRANCH_NAME == 'main' ? 'PROD' : 'DEV'
+                }
+                echo "Deploy environment set to: ${DEPLOY_ENV}"
+            }
+        }
+
         stage('Build Application') {
             steps {
                 echo "Building application on branch: ${BRANCH_NAME}"
