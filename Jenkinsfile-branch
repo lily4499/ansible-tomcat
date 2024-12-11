@@ -1,9 +1,7 @@
 pipeline {
     agent any
     environment {
-
         BRANCH_NAME = env.BRANCH_NAME ?: 'dev'
-
         APP_DIR = 'demo-app/'               // Directory of the application
         TOMCAT_WEBAPPS = '/usr/local/tomcat/webapps/'  // Tomcat webapps directory
         TOMCAT_USER = 'tomcat'              // SSH user for Tomcat servers
