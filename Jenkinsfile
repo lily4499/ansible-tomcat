@@ -26,14 +26,14 @@ pipeline {
         stage('Configure Servers') {
             steps {
                 echo "Configuring ${DEPLOY_ENV} server with Tomcat..."
-                ansiblePlaybook playbook: "ansible/install_tomcat_${DEPLOY_ENV}.yml", inventory: 'ansible/inventory.ini'
+                ansiblePlaybook playbook: "ansible/install_tomcat.yml", inventory: 'ansible/inventory.ini'
             }
         }
 
         stage('Deploy Application') {
             steps {
                 echo "Deploying application to ${DEPLOY_ENV} server on branch: ${BRANCH_NAME}"
-                ansiblePlaybook playbook: "ansible/deploy_app_${DEPLOY_ENV}.yml", inventory: 'ansible/inventory.ini'
+                ansiblePlaybook playbook: "ansible/deploy_app.yml", inventory: 'ansible/inventory.ini'
             }
         }
     }
