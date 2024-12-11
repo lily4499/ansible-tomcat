@@ -8,11 +8,14 @@ pipeline {
     }
     stages {
         stage('Checkout') {
-            steps {
-                // Clone the repository
-                checkout scm
-            }
-        }
+    steps {
+        // Clone the repository
+        checkout scm
+        // Debug: Print the branch name
+        echo "Branch Name: ${env.BRANCH_NAME}"
+    }
+}
+
         stage('Build') {
             steps {
                 dir("${APP_DIR}") {
