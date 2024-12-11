@@ -21,11 +21,14 @@ pipeline {
             }
         }
         stage('Deploy to Tomcat') {
+            when {
+                anyOf {
+                    branch 'dev'
+                    branch 'prod'
+                }
+            }
             steps {
                 script {
-                    if (!env.BRANCH_NAME) {
-                        error("Branch name is null. Ensure the pipeline is configured as a Multibranch Pipeline and triggered by a branch.")
-                    }
                     def tomcatConfig = [:]
                     if (env.BRANCH_NAME == 'dev') {
                         tomcatConfig.host = '172.18.0.4'
