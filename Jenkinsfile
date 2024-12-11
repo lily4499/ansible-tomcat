@@ -20,6 +20,7 @@ pipeline {
             steps {
                 echo "Building application on branch: ${BRANCH_NAME}"
                 sh 'cd demo-app && mvn clean package'
+                archiveArtifacts artifacts: 'demo-app/target/*.war', fingerprint: true
             }
         }
 
