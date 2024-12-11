@@ -26,24 +26,26 @@ pipeline {
         stage('Configure Servers') {
             steps {
                 echo "Configuring ${DEPLOY_ENV} server with Tomcat..."
-                ansiblePlaybook credentialsId: 'ec2-devops-key',
-                                 playbook: "ansible/install_tomcat_${DEPLOY_ENV}.yml", 
-                                 inventory: 'ansible/inventory.ini',
-                                 extraVars: [
-                                     workspace_path: "${WORKSPACE}"
-                                 ]
+                sshagent(['ec2-devops-key']) {
+                    ansiblePlaybook playbook: "ansible/install_tomcat_${DEPLOY_ENV}.yml", 
+                                     inventory: 'ansible/inventory.ini',
+                                     extraVars: [
+                                         workspace_path: "${WORKSPACE}"
+                                     ]
+                }
             }
         }
 
         stage('Deploy Application') {
             steps {
                 echo "Deploying application to ${DEPLOY_ENV} server on branch: ${BRANCH_NAME}"
-                ansiblePlaybook credentialsId: 'ec2-devops-key',
-                                 playbook: "ansible/deploy_app_${DEPLOY_ENV}.yml", 
-                                 inventory: 'ansible/inventory.ini',
-                                 extraVars: [
-                                     workspace_path: "${WORKSPACE}"
-                                 ]
+                sshagent(['ec2-devops-key']) {
+                    ansiblePlaybook playbook: "ansible/deploy_app_${DEPLOY_ENV}.yml", 
+                                     inventory: 'ansible/inventory.ini',
+                                     extraVars: [
+                                         workspace_path: "${WORKSPACE}"
+                                     ]
+                }
             }
         }
     }
