@@ -1,12 +1,24 @@
 ---
-- name: Copy file from Jenkins workspace to Tomcat
+- name: Deploy WAR to Tomcat
   hosts: all
   become: yes
   tasks:
+    - name: Verify if WAR file exists in Jenkins workspace
+      ansible.builtin.stat:
+        path: /var/jenkins_home/workspace/jenkins-multibranch-ec2/demo-app/target/demo-app.war
+      delegate_to: localhost
+      register: war_file
+
+    - name: Fail if WAR file is missing
+      ansible.builtin.fail:
+        msg: "WAR file not found at /var/jenkins_home/workspace/jenkins-multibranch-ec2/demo-app/target/demo-app.war"
+      when: not war_file.stat.exists
+
     - name: Copy WAR file from Jenkins workspace to a temporary location
       ansible.builtin.command:
         cmd: cp /var/jenkins_home/workspace/jenkins-multibranch-ec2/demo-app/target/demo-app.war /tmp/demo-app.war
       delegate_to: localhost
+      when: war_file.stat.exists
 
     - name: Transfer WAR file to target host
       ansible.builtin.copy:
@@ -21,3 +33,4 @@
     - name: Start Tomcat
       ansible.builtin.shell:
         cmd: /opt/tomcat/bin/startup.sh
+
