@@ -38,12 +38,12 @@ pipeline {
                     }
 
                     sshagent(['tomcat-ssh']) {
-                        sh \"\"\"\n
-                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} 'mkdir -p ${TOMCAT_WEBAPPS}'\n
-                            scp -P ${tomcatConfig.sshPort} ${APP_DIR}/target/${WAR_FILE} ${TOMCAT_USER}@${tomcatConfig.host}:${TOMCAT_WEBAPPS}\n
-                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} '/usr/local/tomcat/bin/shutdown.sh || true'\n
-                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} '/usr/local/tomcat/bin/startup.sh'\n
-                        \"\"\"\n
+                        sh """
+                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} 'mkdir -p ${TOMCAT_WEBAPPS}'
+                            scp -P ${tomcatConfig.sshPort} ${APP_DIR}/target/${WAR_FILE} ${TOMCAT_USER}@${tomcatConfig.host}:${TOMCAT_WEBAPPS}
+                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} '/usr/local/tomcat/bin/shutdown.sh || true'
+                            ssh -p ${tomcatConfig.sshPort} ${TOMCAT_USER}@${tomcatConfig.host} '/usr/local/tomcat/bin/startup.sh'
+                        """
                     }
                 }
             }
