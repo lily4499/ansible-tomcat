@@ -1,7 +1,6 @@
 pipeline {
     agent any
     environment {
-   
         APP_DIR = 'demo-app/'               // Directory of the application
         TOMCAT_WEBAPPS = '/usr/local/tomcat/webapps/'  // Tomcat webapps directory
         TOMCAT_USER = 'tomcat'              // SSH user for Tomcat servers
@@ -9,13 +8,13 @@ pipeline {
     }
     stages {
         stage('Checkout') {
-    steps {
-        // Clone the repository
-        checkout scm
-        // Debug: Print the branch name
-        echo "Branch Name: ${env.BRANCH_NAME}"
-    }
-}
+            steps {
+                // Clone the repository
+                checkout scm
+                // Debug: Print the branch name
+                echo "Branch Name: ${env.BRANCH_NAME}"
+            }
+        }
 
         stage('Build') {
             steps {
@@ -24,11 +23,13 @@ pipeline {
                 }
             }
         }
+
         stage('Deploy to Tomcat') {
             when {
                 anyOf {
                     branch 'dev'
                     branch 'prod'
+                    branch 'main'
                 }
             }
             steps {
@@ -40,6 +41,9 @@ pipeline {
                     } else if (env.BRANCH_NAME == 'prod') {
                         tomcatConfig.host = '172.18.0.5'
                         tomcatConfig.sshPort = '2224'
+                    } else if (env.BRANCH_NAME == 'main') {
+                        tomcatConfig.host = '172.18.0.3' // Add the Tomcat server IP/host for the main branch
+                        tomcatConfig.sshPort = '2222'   // Add the correct SSH port for the main branch
                     } else {
                         error("Branch ${env.BRANCH_NAME} is not configured for deployment.")
                     }
