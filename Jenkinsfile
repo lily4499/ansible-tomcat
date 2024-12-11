@@ -27,7 +27,7 @@ pipeline {
             steps {
                 echo "Configuring ${DEPLOY_ENV} server with Tomcat..."
                 sshagent(['ec2-devops-key']) {
-                    ansiblePlaybook playbook: "ansible/install_tomcat_${DEPLOY_ENV}.yml", 
+                    ansiblePlaybook playbook: "ansible/install_tomcat.yml", 
                                      inventory: 'ansible/inventory.ini',
                                      extraVars: [
                                          workspace_path: "${WORKSPACE}"
@@ -40,7 +40,7 @@ pipeline {
             steps {
                 echo "Deploying application to ${DEPLOY_ENV} server on branch: ${BRANCH_NAME}"
                 sshagent(['ec2-devops-key']) {
-                    ansiblePlaybook playbook: "ansible/deploy_app_${DEPLOY_ENV}.yml", 
+                    ansiblePlaybook playbook: "ansible/deploy_app.yml", 
                                      inventory: 'ansible/inventory.ini',
                                      extraVars: [
                                          workspace_path: "${WORKSPACE}"
