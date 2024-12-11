@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Welcome to the Java Application Development!">
+    <meta name="description" content="Welcome to Java Application Development!">
     <meta name="author" content="Liliane's Blog">
     <title>Welcome to Java App <span style="color: blue; font-size: 1.5em;">Dev</span></title>
     <style>
