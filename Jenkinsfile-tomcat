@@ -5,7 +5,7 @@ pipeline {
         TOMCAT_WEBAPPS = '/usr/local/tomcat/webapps/'  // Corrected Tomcat webapps directory
         TOMCAT_USER = 'tomcat'              // SSH user for Tomcat server
         TOMCAT_HOST = '172.18.0.3'          // Tomcat server IP or hostname
-        TOMCAT_SSH_PORT = '22'            // Updated SSH port for Tomcat server
+        TOMCAT_SSH_PORT = '2222'            // Updated SSH port for Tomcat server
         WAR_FILE = 'demo-app.war'           // Name of the WAR file to deploy
     }
     stages {
