@@ -30,6 +30,9 @@ pipeline {
                     if (env.BRANCH_NAME == 'dev') {
                         tomcatConfig.host = '172.18.0.4'
                         tomcatConfig.sshPort = '2223'
+                    } else if (env.BRANCH_NAME == 'main') {
+                        tomcatConfig.host = '172.18.0.3'
+                        tomcatConfig.sshPort = '2222'
                     } else if (env.BRANCH_NAME == 'prod') {
                         tomcatConfig.host = '172.18.0.5'
                         tomcatConfig.sshPort = '2224'
