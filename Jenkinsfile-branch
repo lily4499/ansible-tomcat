@@ -17,7 +17,7 @@ pipeline {
                         // Checkout branch
                         checkout([$class: 'GitSCM',
                                   branches: [[name: "origin/${branch}"]],
-                                  userRemoteConfigs: [[url: 'https://github.com/<your-repo>.git']]])
+                                  userRemoteConfigs: [[url: 'https://github.com/lily4499/ansible-tomcat.git']]])
 
                         echo "Building branch: ${branch}"
                         
